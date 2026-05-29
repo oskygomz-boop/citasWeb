@@ -390,8 +390,8 @@
   <!-- STEP 2: FECHA -->
   <div id="step2" style="display:none">
     <div class="notice">
-      <i class="ti ti-info-circle" style="color:var(--green-main);font-size:15px"></i>
-      Solo se muestran días con radiólogo disponible en tu sucursal
+      <i class="ti ti-clock-hour-4" style="color:var(--green-main);font-size:15px"></i>
+      <span>Los espacios son <strong>limitados</strong> — atendemos pocos pacientes al día para garantizar una experiencia personalizada en <strong id="noticeBranch"></strong></span>
     </div>
     <div class="card">
       <div class="cal-header">
@@ -613,9 +613,18 @@
     document.getElementById('calGrid').innerHTML = html;
     document.getElementById('calTitle').textContent = `${MONTHS[calM]} ${calY}`;
     const cnt = Object.keys(availMap).length;
-    document.getElementById('availTxt').textContent = cnt > 0
-      ? `${cnt} día${cnt>1?'s':''} con lugar disponible este mes`
-      : 'Sin disponibilidad este mes — prueba el siguiente';
+    const totalLibres = Object.values(availMap).reduce((acc, bloques) => acc + bloques.reduce((a,b) => a + b.libres, 0), 0);
+    let hintTxt = '';
+    if (cnt === 0) {
+      hintTxt = 'Sin espacios disponibles este mes — prueba el siguiente';
+    } else if (totalLibres <= 3) {
+      hintTxt = `⚠️ Últimos ${totalLibres} espacio${totalLibres>1?'s':''} disponible${totalLibres>1?'s':''} este mes`;
+    } else if (cnt <= 3) {
+      hintTxt = `Solo ${cnt} día${cnt>1?'s':''} disponible${cnt>1?'s':''} este mes — los espacios se llenan rápido`;
+    } else {
+      hintTxt = `${cnt} días con espacio disponible este mes`;
+    }
+    document.getElementById('availTxt').textContent = hintTxt;
     document.getElementById('availHint').style.display = 'flex';
   }
 
@@ -674,7 +683,11 @@
       const el = document.getElementById('s'+i);
       el.className = 'step' + (i<n?' done': i===n?' active':'');
     });
-    if (n===2) loadCal();
+    if (n===2) {
+      const nb = document.getElementById('noticeBranch');
+      if (nb) nb.textContent = 'sucursal ' + selBranchName;
+      loadCal();
+    }
     if (n===3) {
       const lbl = new Date(selDate+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
       document.getElementById('bookSummary').innerHTML =
