@@ -217,6 +217,7 @@
     .cd.avail:hover { background: var(--green-pale); }
     .cd.selday { background: var(--green-dark); color: #E1F5EE; font-weight: 500; }
     .cd.past { opacity: .3; }
+    .cd.full-day { background: #fff0f0; color: #ccc; font-size: 11px; }
     .avail-hint {
       display: flex; align-items: center; gap: 6px;
       font-size: 11.5px; color: var(--text-muted);
@@ -411,6 +412,7 @@
       <div class="slot-lbl">Horario disponible el <span id="slotLbl"></span>:</div>
       <div class="slots" id="slotsGrid"></div>
     </div>
+    <div id="sugerenciaSlot" style="display:none;margin-bottom:1rem;font-size:12.5px;color:var(--text-muted);background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;gap:7px;align-items:center"></div>
     <button class="sbtn" onclick="goStep(3)" id="btnS2" disabled>
       Continuar <i class="ti ti-arrow-right"></i>
     </button>
@@ -512,27 +514,76 @@
   }
 
   /* ---- CALENDAR ---- */
+  // availMap[fecha] = array de bloques con espacio disponible (< 2 citas activas)
+  // fullMap[fecha]  = true si TODOS los bloques de ese día están llenos (para UI)
+
+  const MAX_POR_BLOQUE = 2;
+  let fullMap = {}; // días donde todos los bloques están llenos
+
   async function loadCal() {
     document.getElementById('loadCal').style.display = 'block';
     document.getElementById('calGrid').innerHTML = '';
     document.getElementById('availHint').style.display = 'none';
     document.getElementById('slotsWrap').style.display = 'none';
     document.getElementById('btnS2').disabled = true;
-    availMap = {};
+    availMap = {}; fullMap = {};
+
     if (branchDbId) {
       try {
         const first = `${calY}-${String(calM+1).padStart(2,'0')}-01`;
         const last  = `${calY}-${String(calM+1).padStart(2,'0')}-${new Date(calY,calM+1,0).getDate()}`;
-        const { data } = await SB.from('bloques_rx')
-          .select('id,fecha,hora,radiologo_id')
+
+        // 1. Traer todos los bloques del mes para esta sucursal
+        const { data: bloques } = await SB.from('bloques_rx')
+          .select('id,fecha,hora')
           .eq('branch_id', branchDbId)
           .gte('fecha', first)
-          .lte('fecha', last);
-        if (data) data.forEach(r => {
-          if (!availMap[r.fecha]) availMap[r.fecha] = [];
-          availMap[r.fecha].push({ id: r.id, hora: r.hora });
+          .lte('fecha', last)
+          .order('hora', { ascending: true });
+
+        if (!bloques || !bloques.length) {
+          document.getElementById('loadCal').style.display = 'none';
+          renderCal(); return;
+        }
+
+        // 2. Contar citas activas por bloque_rx_id
+        const bloqueIds = bloques.map(b => b.id);
+        const { data: citas } = await SB.from('citas')
+          .select('bloque_rx_id')
+          .in('bloque_rx_id', bloqueIds)
+          .not('estatus', 'in', '("cancelada")');
+
+        // conteo por bloque
+        const conteo = {};
+        if (citas) citas.forEach(c => {
+          if (c.bloque_rx_id) conteo[c.bloque_rx_id] = (conteo[c.bloque_rx_id] || 0) + 1;
         });
-      } catch(e) {}
+
+        // 3. Separar bloques con espacio vs llenos
+        // allBloquesByDate = todos los bloques del día (para saber si está "todo lleno")
+        const allByDate = {};
+        bloques.forEach(b => {
+          if (!allByDate[b.fecha]) allByDate[b.fecha] = [];
+          allByDate[b.fecha].push(b);
+        });
+
+        Object.keys(allByDate).forEach(fecha => {
+          const disponibles = allByDate[fecha].filter(b => (conteo[b.id] || 0) < MAX_POR_BLOQUE);
+          if (disponibles.length > 0) {
+            // añadir info de ocupación para mostrar en slots
+            availMap[fecha] = disponibles.map(b => ({
+              id: b.id,
+              hora: b.hora,
+              ocupados: conteo[b.id] || 0,
+              libres: MAX_POR_BLOQUE - (conteo[b.id] || 0)
+            }));
+          } else {
+            // día lleno — marcar para sugerir siguiente disponible
+            fullMap[fecha] = true;
+          }
+        });
+
+      } catch(e) { console.warn('loadCal error:', e); }
     }
     document.getElementById('loadCal').style.display = 'none';
     renderCal();
@@ -545,18 +596,25 @@
     let html = DAYS.map(d => `<div class="cdl">${d}</div>`).join('');
     for (let i=0; i<start; i++) html += '<div class="cd"></div>';
     for (let d=1; d<=days; d++) {
-      const ds  = `${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const dt  = new Date(calY, calM, d);
-      const past = dt < today, has = !!availMap[ds], isSel = selDate===ds;
-      let cls = 'cd' + (past?' past': isSel?' selday': has?' avail':'');
+      const ds   = `${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dt   = new Date(calY, calM, d);
+      const past = dt < today;
+      const has  = !!availMap[ds];
+      const full = !!fullMap[ds];
+      const isSel = selDate === ds;
+      let cls = 'cd';
+      if (past)       cls += ' past';
+      else if (isSel) cls += ' selday';
+      else if (has)   cls += ' avail';
+      else if (full)  cls += ' full-day'; // visual de lleno
       const oc = (!past && has) ? `onclick="pickDate('${ds}')"` : '';
-      html += `<div class="${cls}" ${oc}>${d}</div>`;
+      html += `<div class="${cls}" ${oc} title="${full?'Sin lugares disponibles':''}">${d}</div>`;
     }
     document.getElementById('calGrid').innerHTML = html;
     document.getElementById('calTitle').textContent = `${MONTHS[calM]} ${calY}`;
     const cnt = Object.keys(availMap).length;
     document.getElementById('availTxt').textContent = cnt > 0
-      ? `${cnt} día${cnt>1?'s':''} con radiólogo disponible este mes`
+      ? `${cnt} día${cnt>1?'s':''} con lugar disponible este mes`
       : 'Sin disponibilidad este mes — prueba el siguiente';
     document.getElementById('availHint').style.display = 'flex';
   }
@@ -565,16 +623,42 @@
     selDate = ds; selBloque = null;
     document.getElementById('btnS2').disabled = true;
     renderCal();
+
     const bloques = availMap[ds] || [];
     const lbl = new Date(ds+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
     document.getElementById('slotLbl').textContent = lbl;
-    document.getElementById('slotsGrid').innerHTML = bloques.map(b =>
-      `<div class="slot" onclick="pickSlot(this,'${b.id}','${b.hora}')">${b.hora}</div>`).join('');
+
+    // Mostrar slots con indicador de ocupación
+    document.getElementById('slotsGrid').innerHTML = bloques.map(b => {
+      const tag = b.ocupados > 0
+        ? `<span style="font-size:10px;background:rgba(255,152,0,0.15);color:#e65100;padding:1px 6px;border-radius:8px;margin-left:4px">1 lugar</span>`
+        : `<span style="font-size:10px;background:var(--green-bg);color:var(--green-dark);padding:1px 6px;border-radius:8px;margin-left:4px">2 lugares</span>`;
+      return `<div class="slot" onclick="pickSlot(this,'${b.id}','${b.hora}','${ds}')">${b.hora}${tag}</div>`;
+    }).join('');
+
+    // Si hay bloques llenos ese día, mostrar sugerencia de siguiente disponible
+    const siguiente = getSiguienteDisponible(ds);
+    const sugerenciaEl = document.getElementById('sugerenciaSlot');
+    if (siguiente) {
+      const lblSig = new Date(siguiente+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+      sugerenciaEl.innerHTML = `<i class="ti ti-bulb" style="color:var(--green-main)"></i> También hay lugar el <strong>${lblSig}</strong> — <span style="cursor:pointer;color:var(--green-main);text-decoration:underline" onclick="pickDate('${siguiente}')">ver horarios</span>`;
+      sugerenciaEl.style.display = 'flex';
+    } else {
+      sugerenciaEl.style.display = 'none';
+    }
+
     document.getElementById('slotsWrap').style.display = 'block';
   }
 
-  function pickSlot(el, id, hora) {
+  // Encuentra el siguiente día con disponibilidad después de 'ds'
+  function getSiguienteDisponible(ds) {
+    const fechas = Object.keys(availMap).sort();
+    return fechas.find(f => f > ds) || null;
+  }
+
+  function pickSlot(el, id, hora, fecha) {
     selBloque = { id, hora };
+    if (fecha) selDate = fecha;
     document.querySelectorAll('.slot').forEach(b => b.classList.remove('sel'));
     el.classList.add('sel');
     document.getElementById('btnS2').disabled = false;
