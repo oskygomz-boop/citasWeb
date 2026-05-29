@@ -568,9 +568,13 @@
         });
 
         Object.keys(allByDate).forEach(fecha => {
+          // ignorar fechas pasadas o de hoy directamente en el mapa
+          const fechaDt = new Date(fecha + 'T12:00:00');
+          const manana = new Date(); manana.setHours(0,0,0,0); manana.setDate(manana.getDate() + 1);
+          if (fechaDt < manana) return; // solo fechas desde mañana en adelante
+
           const disponibles = allByDate[fecha].filter(b => (conteo[b.id] || 0) < MAX_POR_BLOQUE);
           if (disponibles.length > 0) {
-            // añadir info de ocupación para mostrar en slots
             availMap[fecha] = disponibles.map(b => ({
               id: b.id,
               hora: b.hora,
@@ -578,7 +582,6 @@
               libres: MAX_POR_BLOQUE - (conteo[b.id] || 0)
             }));
           } else {
-            // día lleno — marcar para sugerir siguiente disponible
             fullMap[fecha] = true;
           }
         });
