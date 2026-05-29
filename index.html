@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agendar Cita — Quiropráctico Lefranm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Playfair+Display:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #085041;
+      --green-mid: #0F6E56;
+      --green-main: #1D9E75;
+      --green-light: #5DCAA5;
+      --green-pale: #9FE1CB;
+      --green-bg: #E1F5EE;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --border: rgba(0,0,0,0.10);
+      --bg: #ffffff;
+      --bg-soft: #f8faf9;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-soft);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* LOGO HEADER */
+    .brand {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--green-dark);
+      letter-spacing: 0.3px;
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* PAQUETE */
+    .pkg {
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .pkg-top {
+      background: var(--green-dark);
+      padding: 1.25rem 1.5rem;
+      position: relative;
+    }
+    .pkg-badge {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: var(--green-bg);
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .pkg-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px;
+      color: #E1F5EE;
+      margin-bottom: 2px;
+    }
+    .pkg-sub {
+      font-size: 12px;
+      color: var(--green-light);
+      margin-bottom: 0.75rem;
+    }
+    .pkg-price {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .pkg-price strong {
+      font-size: 32px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+    .pkg-price span { font-size: 13px; color: var(--green-pale); }
+    .pkg-body {
+      background: var(--bg);
+      padding: 1rem 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pkg-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .pkg-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--green-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .pkg-dot i { font-size: 11px; color: var(--green-mid); }
+
+    /* STEPS */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+    .step {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .step.done { background: var(--green-main); color: #fff; border-color: var(--green-main); }
+    .step.active { border-color: var(--green-main); color: var(--green-mid); }
+    .step-line { flex: 1; height: 1px; background: var(--border); }
+    .step-lbl { font-size: 10.5px; color: var(--text-muted); }
+
+    /* CARDS */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: .75rem;
+    }
+
+    /* BRANCH GRID */
+    .branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .bc {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .bc:hover { border-color: var(--green-main); }
+    .bc.sel { border-color: var(--green-main); background: var(--green-bg); }
+    .b-name { font-weight: 500; font-size: 13px; color: var(--text); margin-bottom: 2px; }
+    .b-addr { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .b-zone {
+      font-size: 10.5px; color: var(--green-dark);
+      background: var(--green-bg);
+      padding: 2px 8px; border-radius: 10px;
+      display: inline-block; margin-top: 5px;
+    }
+
+    /* CALENDAR */
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .9rem;
+    }
+    .cal-nav {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: none; cursor: pointer;
+      font-size: 16px; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .cal-nav:hover { background: var(--bg-soft); }
+    .cal-title { font-size: 14px; font-weight: 500; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .cdl { text-align: center; font-size: 11px; color: var(--text-muted); padding: 4px 0; font-weight: 500; }
+    .cd { text-align: center; padding: 7px 2px; border-radius: 6px; font-size: 12.5px; color: var(--text-muted); }
+    .cd.avail { background: var(--green-bg); color: var(--green-dark); cursor: pointer; font-weight: 500; border: 1px solid var(--green-pale); }
+    .cd.avail:hover { background: var(--green-pale); }
+    .cd.selday { background: var(--green-dark); color: #E1F5EE; font-weight: 500; }
+    .cd.past { opacity: .3; }
+    .avail-hint {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11.5px; color: var(--text-muted);
+      margin-top: .65rem;
+    }
+    .avail-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green-bg); border: 1px solid var(--green-pale); flex-shrink: 0; }
+    .loading-cal { text-align: center; padding: .75rem; color: var(--text-muted); font-size: 12.5px; }
+
+    /* SLOTS */
+    .slot-lbl { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .slots { display: flex; flex-wrap: wrap; gap: 8px; }
+    .slot {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px; cursor: pointer;
+      background: var(--bg-soft);
+      transition: all .15s;
+    }
+    .slot:hover, .slot.sel { border-color: var(--green-main); background: var(--green-bg); color: var(--green-dark); font-weight: 500; }
+
+    /* FORM */
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+    .fg.full { grid-column: 1/-1; }
+    .flbl { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--green-main); }
+
+    /* BUTTON */
+    .sbtn {
+      width: 100%;
+      padding: 13px;
+      background: var(--green-dark);
+      color: #E1F5EE;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .sbtn:hover { background: var(--green-mid); }
+    .sbtn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* SUMMARY BAR */
+    .summary-bar {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      background: var(--bg-soft);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-bottom: .9rem;
+      border: 1px solid var(--border);
+    }
+
+    /* NOTICE */
+    .notice {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted);
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-bottom: .9rem;
+    }
+
+    /* SUCCESS */
+    .success-box { text-align: center; padding: 2.5rem 1rem; }
+    .success-icon {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: var(--green-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .success-icon i { font-size: 28px; color: var(--green-main); }
+    .success-tips {
+      margin: 1.1rem auto 0;
+      padding: .9rem 1.1rem;
+      background: var(--bg-soft);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 360px;
+      text-align: left;
+    }
+
+    /* FOOTER */
+    .widget-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: .6;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem .75rem 3rem; }
+      .pkg-body { grid-template-columns: 1fr; }
+      .fgrid { grid-template-columns: 1fr; }
+      .fg.full { grid-column: 1; }
+      .branch-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <div class="brand-name">Quiropráctico Lefranm</div>
+    <div class="brand-sub">Agenda tu primera consulta</div>
+  </div>
+
+  <!-- PAQUETE -->
+  <div class="pkg">
+    <div class="pkg-top">
+      <div class="pkg-badge"><i class="ti ti-sparkles"></i> Paquete completo</div>
+      <div class="pkg-title">Primera Consulta con RX</div>
+      <div class="pkg-sub">La única forma de iniciar tu tratamiento</div>
+      <div class="pkg-price">
+        <strong>$1,900</strong>
+        <span>pago único · todo incluido</span>
+      </div>
+    </div>
+    <div class="pkg-body">
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-radio"></i></div><span>5 radiografías de columna</span></div>
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-stethoscope"></i></div><span>Interpretación médica</span></div>
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-scan"></i></div><span>Escáner postural</span></div>
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-file-text"></i></div><span>Expediente clínico digital</span></div>
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-spine"></i></div><span>Primer ajuste quiropráctico</span></div>
+      <div class="pkg-item"><div class="pkg-dot"><i class="ti ti-clipboard-list"></i></div><span>Plan de tratamiento</span></div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="s1">1</div><div class="step-lbl">Sucursal</div>
+    <div class="step-line"></div>
+    <div class="step" id="s2">2</div><div class="step-lbl">Fecha</div>
+    <div class="step-line"></div>
+    <div class="step" id="s3">3</div><div class="step-lbl">Datos</div>
+    <div class="step-line"></div>
+    <div class="step" id="s4">4</div><div class="step-lbl">Listo</div>
+  </div>
+
+  <!-- STEP 1: SUCURSAL -->
+  <div id="step1">
+    <div class="card-label">¿En cuál sucursal quieres tu consulta?</div>
+    <div class="branch-grid" id="branchGrid"></div>
+    <button class="sbtn" onclick="goStep(2)" id="btnS1" disabled>
+      Continuar <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 2: FECHA -->
+  <div id="step2" style="display:none">
+    <div class="notice">
+      <i class="ti ti-info-circle" style="color:var(--green-main);font-size:15px"></i>
+      Solo se muestran días con radiólogo disponible en tu sucursal
+    </div>
+    <div class="card">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="prevM()">‹</button>
+        <span class="cal-title" id="calTitle"></span>
+        <button class="cal-nav" onclick="nextM()">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="loading-cal" id="loadCal">
+        <i class="ti ti-loader-2"></i> Consultando agenda RX...
+      </div>
+      <div class="avail-hint" id="availHint" style="display:none">
+        <div class="avail-dot"></div>
+        <span id="availTxt"></span>
+      </div>
+    </div>
+    <div id="slotsWrap" style="display:none;margin-bottom:1rem">
+      <div class="slot-lbl">Horario disponible el <span id="slotLbl"></span>:</div>
+      <div class="slots" id="slotsGrid"></div>
+    </div>
+    <button class="sbtn" onclick="goStep(3)" id="btnS2" disabled>
+      Continuar <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 3: DATOS -->
+  <div id="step3" style="display:none">
+    <div class="summary-bar" id="bookSummary"></div>
+    <div class="card">
+      <div class="fgrid">
+        <div class="fg">
+          <label class="flbl">Nombre completo *</label>
+          <input type="text" id="fNombre" placeholder="Tu nombre completo" />
+        </div>
+        <div class="fg">
+          <label class="flbl">Teléfono *</label>
+          <input type="tel" id="fTel" placeholder="55 1234 5678" />
+        </div>
+        <div class="fg full">
+          <label class="flbl">Correo electrónico</label>
+          <input type="email" id="fEmail" placeholder="correo@ejemplo.com (opcional)" />
+        </div>
+        <div class="fg full">
+          <label class="flbl">¿Qué molestia principal te trae con nosotros?</label>
+          <input type="text" id="fMolestia" placeholder="Ej: dolor de espalda, cuello, ciática..." />
+        </div>
+      </div>
+    </div>
+    <button class="sbtn" onclick="submitForm()" id="btnSubmit">
+      <i class="ti ti-calendar-check"></i> Confirmar solicitud — $1,900
+    </button>
+  </div>
+
+  <!-- STEP 4: ÉXITO -->
+  <div id="step4" style="display:none">
+    <div class="card">
+      <div class="success-box">
+        <div class="success-icon"><i class="ti ti-check"></i></div>
+        <h3 style="font-size:17px;font-weight:500;margin-bottom:8px">¡Solicitud registrada!</h3>
+        <p style="font-size:13.5px;color:var(--text-muted);line-height:1.65;max-width:360px;margin:0 auto" id="confirmMsg"></p>
+        <div class="success-tips">
+          <strong style="color:var(--text);font-size:12.5px">Para tu visita recuerda:</strong><br>
+          • Ropa cómoda · Lentes si los usas<br>
+          • Solo un acompañante mayor de edad<br>
+          • Llega puntual · Con síntomas respiratorios usa cubrebocas
+        </div>
+        <button class="sbtn" style="max-width:190px;margin:1.25rem auto 0;display:block;font-size:13.5px" onclick="resetForm()">
+          Nueva solicitud
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-footer">© Quiropráctico Lefranm · lefranmquiropractico.com</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  const SB = supabase.createClient(
+    'https://slfeecmvjueedgaiuory.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZmVlY212anVlZWRnYWl1b3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NjY4NDYsImV4cCI6MjA5MTQ0Mjg0Nn0.h7BB692QpOWy53vvEHkyFSs0LsfvIv4094wCYjJKsXw'
+  );
+
+  const BRANCHES = [
+    { name:'Pedregal',       addr:'Av. San Jerónimo 273, Tizapán San Ángel, Álvaro Obregón, 01090', zone:'CDMX Sur' },
+    { name:'Luis Cabrera',   addr:'Av. Contreras 386-L6, San Jerónimo Lídice, Magdalena Contreras, 10200', zone:'CDMX Suroeste' },
+    { name:'Lomas Estrella', addr:'Av. Tlahuac #4746 L13, Granjas Estrella, Iztapalapa, 09880', zone:'CDMX Oriente' },
+    { name:'Ermita',         addr:'Ermita Iztapalapa 2845, Reforma Política, Iztapalapa, 09730', zone:'CDMX Oriente' },
+    { name:'Tulyehualco',    addr:'Ignacio Zaragoza 4, Santiago Tulyehualco, Xochimilco, 16750', zone:'CDMX Sur' },
+    { name:'La Turba',       addr:'Av. la Turba 382, La Turba, Tláhuac, 13270', zone:'CDMX Sur-Oriente' },
+    { name:'Chicoloapan',    addr:'Av Real de Guadalupe 119B, Chicoloapan de Juárez, Méx. 56370', zone:'Estado de México' }
+  ];
+
+  const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  let selBranch=null, selBranchName='', branchDbId=null;
+  let calY, calM, availMap={}, selDate=null, selBloque=null;
+  const now = new Date(); calY = now.getFullYear(); calM = now.getMonth();
+
+  /* ---- BRANCHES ---- */
+  function renderBranches() {
+    document.getElementById('branchGrid').innerHTML = BRANCHES.map((b,i) => `
+      <div class="bc" id="bc${i}" onclick="pickBranch(${i})">
+        <div class="b-name"><i class="ti ti-map-pin" style="font-size:12px;color:var(--green-main)"></i> ${b.name}</div>
+        <div class="b-addr">${b.addr}</div>
+        <span class="b-zone">${b.zone}</span>
+      </div>`).join('');
+  }
+
+  async function pickBranch(i) {
+    selBranch = i; selBranchName = BRANCHES[i].name;
+    document.querySelectorAll('.bc').forEach((c,j) => c.classList.toggle('sel', j===i));
+    document.getElementById('btnS1').disabled = false;
+    try {
+      const { data } = await SB.from('branches').select('id').ilike('name', `%${BRANCHES[i].name}%`).limit(1);
+      branchDbId = data && data.length ? data[0].id : null;
+    } catch(e) { branchDbId = null; }
+  }
+
+  /* ---- CALENDAR ---- */
+  async function loadCal() {
+    document.getElementById('loadCal').style.display = 'block';
+    document.getElementById('calGrid').innerHTML = '';
+    document.getElementById('availHint').style.display = 'none';
+    document.getElementById('slotsWrap').style.display = 'none';
+    document.getElementById('btnS2').disabled = true;
+    availMap = {};
+    if (branchDbId) {
+      try {
+        const first = `${calY}-${String(calM+1).padStart(2,'0')}-01`;
+        const last  = `${calY}-${String(calM+1).padStart(2,'0')}-${new Date(calY,calM+1,0).getDate()}`;
+        const { data } = await SB.from('bloques_rx')
+          .select('id,fecha,hora,radiologo_id')
+          .eq('branch_id', branchDbId)
+          .gte('fecha', first)
+          .lte('fecha', last);
+        if (data) data.forEach(r => {
+          if (!availMap[r.fecha]) availMap[r.fecha] = [];
+          availMap[r.fecha].push({ id: r.id, hora: r.hora });
+        });
+      } catch(e) {}
+    }
+    document.getElementById('loadCal').style.display = 'none';
+    renderCal();
+  }
+
+  function renderCal() {
+    const days  = new Date(calY, calM+1, 0).getDate();
+    const start = new Date(calY, calM, 1).getDay();
+    const today = new Date(); today.setHours(0,0,0,0);
+    let html = DAYS.map(d => `<div class="cdl">${d}</div>`).join('');
+    for (let i=0; i<start; i++) html += '<div class="cd"></div>';
+    for (let d=1; d<=days; d++) {
+      const ds  = `${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dt  = new Date(calY, calM, d);
+      const past = dt < today, has = !!availMap[ds], isSel = selDate===ds;
+      let cls = 'cd' + (past?' past': isSel?' selday': has?' avail':'');
+      const oc = (!past && has) ? `onclick="pickDate('${ds}')"` : '';
+      html += `<div class="${cls}" ${oc}>${d}</div>`;
+    }
+    document.getElementById('calGrid').innerHTML = html;
+    document.getElementById('calTitle').textContent = `${MONTHS[calM]} ${calY}`;
+    const cnt = Object.keys(availMap).length;
+    document.getElementById('availTxt').textContent = cnt > 0
+      ? `${cnt} día${cnt>1?'s':''} con radiólogo disponible este mes`
+      : 'Sin disponibilidad este mes — prueba el siguiente';
+    document.getElementById('availHint').style.display = 'flex';
+  }
+
+  function pickDate(ds) {
+    selDate = ds; selBloque = null;
+    document.getElementById('btnS2').disabled = true;
+    renderCal();
+    const bloques = availMap[ds] || [];
+    const lbl = new Date(ds+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+    document.getElementById('slotLbl').textContent = lbl;
+    document.getElementById('slotsGrid').innerHTML = bloques.map(b =>
+      `<div class="slot" onclick="pickSlot(this,'${b.id}','${b.hora}')">${b.hora}</div>`).join('');
+    document.getElementById('slotsWrap').style.display = 'block';
+  }
+
+  function pickSlot(el, id, hora) {
+    selBloque = { id, hora };
+    document.querySelectorAll('.slot').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('btnS2').disabled = false;
+  }
+
+  function prevM() { calM--; if(calM<0){calM=11;calY--;} selDate=null; selBloque=null; loadCal(); }
+  function nextM() { calM++; if(calM>11){calM=0;calY++;} selDate=null; selBloque=null; loadCal(); }
+
+  /* ---- STEPS ---- */
+  function goStep(n) {
+    [1,2,3,4].forEach(i => {
+      document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+      const el = document.getElementById('s'+i);
+      el.className = 'step' + (i<n?' done': i===n?' active':'');
+    });
+    if (n===2) loadCal();
+    if (n===3) {
+      const lbl = new Date(selDate+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+      document.getElementById('bookSummary').innerHTML =
+        `<i class="ti ti-map-pin" style="color:var(--green-main)"></i> <strong>${selBranchName}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;<i class="ti ti-calendar" style="color:var(--green-main)"></i> ${lbl} &nbsp;<strong>${selBloque.hora}</strong>`;
+    }
+  }
+
+  function resetForm() {
+    selBranch=null; selBranchName=''; branchDbId=null; selDate=null; selBloque=null;
+    ['fNombre','fTel','fEmail','fMolestia'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('btnS1').disabled = true;
+    renderBranches(); goStep(1);
+  }
+
+  /* ---- SUBMIT ---- */
+  async function submitForm() {
+    const nombre = document.getElementById('fNombre').value.trim();
+    const tel    = document.getElementById('fTel').value.trim();
+    if (!nombre || !tel) { alert('Por favor completa nombre y teléfono.'); return; }
+    const email   = document.getElementById('fEmail').value.trim() || 'sinCorreo@lefranm.com';
+    const molestia = document.getElementById('fMolestia').value.trim() || 'Primera consulta con RX';
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    const clave = 'RX-WEB-' + Math.random().toString(36).substr(2,6).toUpperCase();
+    try {
+      await SB.from('citas').insert({
+        branch_id:    branchDbId,
+        paciente:     nombre,
+        telefono:     tel,
+        clave:        clave,
+        fecha:        selDate,
+        hora_inicio:  selBloque.hora,
+        hora_fin:     selBloque.hora,
+        tipo_servicio:'rx',
+        bloque_rx_id: selBloque.id,
+        quiro_id:     null,
+        motivo:       molestia,
+        month:        selDate.slice(0,7),
+        estatus:      'solicitada_web',
+        notas:        `Solicitud web · Correo: ${email} · Paquete $1,900 Primera con RX`
+      });
+    } catch(e) { console.warn('insert:', e); }
+    const lbl = new Date(selDate+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+    document.getElementById('confirmMsg').innerHTML =
+      `Hola <strong>${nombre}</strong>, tu solicitud <strong>${clave}</strong> quedó registrada para el <strong>${lbl} a las ${selBloque.hora}</strong> en la sucursal <strong>${selBranchName}</strong>.<br><br>Nos comunicaremos al <strong>${tel}</strong> para confirmar tu cita.`;
+    goStep(4);
+  }
+
+  renderBranches();
+  goStep(1);
+</script>
+</body>
+</html>
