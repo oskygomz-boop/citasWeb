@@ -793,15 +793,21 @@
         clave:        clave,
         fecha:        selDate,
         hora_inicio:  selBloque.hora,
-        hora_fin:     selBloque.hora,
+        hora_fin:     (() => {
+          // La toma de RX dura 45 min: hora_fin = hora del bloque + 45
+          // (igual que las demás citas del mismo bloque, para que se vean parejas)
+          const [hh, mm] = selBloque.hora.split(':').map(Number);
+          const tot = hh * 60 + mm + 45;
+          return String(Math.floor(tot / 60) % 24).padStart(2, '0') + ':' + String(tot % 60).padStart(2, '0');
+        })(),
         tipo_servicio:'rx',
         bloque_rx_id: bloqueId,
         radiologo_id: radiologoId,
         quiro_id:     null,
-        motivo:       molestia,
+        motivo:       'Primera con RX',  // fijo: los reportes cuentan la primera por este valor exacto
         month:        selDate.slice(0,7),
         estatus:      'solicitada_web',
-        notas:        `Solicitud web · Correo: ${email} · Paquete $1,900 Primera con RX`
+        notas:        `Solicitud web · Molestia: ${molestia} · Correo: ${email} · Paquete $1,900 Primera con RX`
       });
 
       if (error) {
